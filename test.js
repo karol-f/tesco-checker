@@ -39,21 +39,22 @@ async function screenshotDOMElement(selector, page, path = 'page', padding = 0) 
 
     // Check dates tabs
     const tabsSelector = '.tabs .slot-selector--week-tabheader';
-    await page.waitForSelector(tabsSelector);
+    await page.waitForSelector(tabsSelector)
+        .catch(() => console.error(`Tabs were NOT found`));
     const tabsCount = (await page.$$(tabsSelector)).length;
 
     // Select each tab
     for (let i = 1; i < tabsCount + 1; i++) {
         await page.waitFor(2000);
         await page.click(`${tabsSelector}:nth-of-type(${i}) .slot-selector--week-tabheader-link`);
-        await page.waitForSelector('.slot-selector .overlay-spinner--overlay:not(.open)', { timeout: 12000 });
+        await page.waitForSelector('.slot-selector .overlay-spinner--overlay:not(.open)', { timeout: 12000 })
+            .catch(() => console.error(`NOT found .overlay-spinner--overlay:not(.open)`));
         await page.waitForSelector(`${tabsSelector}:nth-of-type(${i}).active`, { timeout: 12000 })
-            .then(() => console.log(`Tab ${i} is active`))
-            .catch(() => console.log(`Tab ${i} NOT activated :(`));
+            .catch(() => console.error(`Tab ${i} NOT activated :(`));
 
         // check available listed dates
         const resultsSelector = '.slot-selector--week-tab .slot-grid__table';
-        await page.waitForSelector(resultsSelector, { timeout: 5000 })
+        await page.waitForSelector(resultsSelector, { timeout: 4000 })
             .catch(() => {});
 
         const dateLinkSelector = '.slot-grid__table .available-slot--button';
@@ -77,14 +78,17 @@ async function screenshotDOMElement(selector, page, path = 'page', padding = 0) 
 
     // Results
     if (dates.length) {
-        process.env.LOGS = 'Free dates available!';
-        process.env.DATES = dates.join('\n');
+        const previousDates = process.env.PREVIOUS_DATES || '';
+        const isDateChanged = !previousDates || dates.some((date) => !previousDates.includes(date));
 
-        console.log(process.env.LOGS);
-        console.log(process.env.DATES);
+        if (isDateChanged) {
+            console.log(dates.join('\n'));
+        } else {
+            console.error('Dates not changed - ', dates.join(', '));
+            process.exit(1);
+        }
     } else {
-        process.env.LOGS = 'No free dates';
-        console.log(process.env.LOGS);
+        console.error('No available dates');
         process.exit(1);
     }
 
