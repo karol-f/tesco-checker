@@ -1,5 +1,4 @@
 const puppeteer = require('puppeteer');
-const shell = require('shelljs');
 let dates = [];
 
 async function screenshotDOMElement(selector, page, path = 'page', padding = 0) {
@@ -32,9 +31,6 @@ async function screenshotDOMElement(selector, page, path = 'page', padding = 0) 
     });
     await page.goto('https://ezakupy.tesco.pl/groceries/pl-PL/slots/delivery');
     await page.waitForSelector('#email');
-
-    shell.env["TEST"] = "Test Variable";
-    shell.exec('export TEST="Test Variable2"');
 
     // Login
     await page.type('#email', process.env.EMAIL);
