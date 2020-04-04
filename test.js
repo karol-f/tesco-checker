@@ -85,14 +85,15 @@ async function screenshotDOMElement(selector, page, path = 'page', padding = 0) 
     if (dates.length) {
         const previousDates = process.env.PREVIOUS_DATES || '';
         const now = (new Date().getTime() / 1000);
-        const lastFoundTimestamp = parseInt(process.env.LAST_FOUND_DATES_TIMESTAMP, 10) || now;
-        const lastNotFoundTimestamp = parseInt(process.env.LAST_NOT_FOUND_DATES_TIMESTAMP, 10) || now;
+        const lastFoundTimestamp = parseInt(process.env.LAST_FOUND_DATES_TIMESTAMP, 10);
+        const lastNotFoundTimestamp = parseInt(process.env.LAST_NOT_FOUND_DATES_TIMESTAMP, 10);
         const oneHour = 3600;
 
         const isDateChanged = !previousDates || dates.some((date) => !previousDates.includes(date));
+        const isDateAppearAgain = (lastFoundTimestamp && lastNotFoundTimestamp) && (lastNotFoundTimestamp > lastFoundTimestamp) && (lastFoundTimestamp + oneHour < now );
 
-        if (isDateChanged || (lastNotFoundTimestamp < now - oneHour)) {
-            const isDateSameDay = isSameDay(new Date(lastFoundTimestamp * 1000), new Date());
+        if (isDateChanged || isDateAppearAgain) {
+            const isDateSameDay = lastFoundTimestamp && isSameDay(new Date(lastFoundTimestamp * 1000), new Date());
             if (isDateSameDay) {
                 const merged = [...previousDates.split('\n'), ...dates].filter(Boolean);
                 const mergedAndDeduplicated = [...new Set(merged)];
@@ -101,10 +102,10 @@ async function screenshotDOMElement(selector, page, path = 'page', padding = 0) 
                 console.log(dates.join('\n'));
             }
         } else {
-            console.error('Dates not changed - ', dates.join(', '));
+            console.log('Dates not changed');
         }
     } else {
-        console.error('No available dates');
+        console.log('No available dates');
     }
 
     await browser.close();
