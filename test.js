@@ -1,4 +1,6 @@
 const puppeteer = require('puppeteer');
+const isSameDay = require('date-fns/isSameDay');
+
 let dates = [];
 
 async function screenshotDOMElement(selector, page, path = 'page', padding = 0) {
@@ -79,17 +81,27 @@ async function screenshotDOMElement(selector, page, path = 'page', padding = 0) 
     // Results
     if (dates.length) {
         const previousDates = process.env.PREVIOUS_DATES || '';
+        const now = (new Date().getTime() / 1000);
+        const lastFoundTimestamp = parseInt(process.env.LAST_FOUND_DATES_TIMESTAMP, 10) || now;
+        const lastNotFoundTimestamp = parseInt(process.env.LAST_NOT_FOUND_DATES_TIMESTAMP, 10) || now;
+        const oneHour = 3600;
+
         const isDateChanged = !previousDates || dates.some((date) => !previousDates.includes(date));
 
-        if (isDateChanged) {
-            console.log(dates.join('\n'));
+        if (isDateChanged || (lastNotFoundTimestamp < now - oneHour)) {
+            const isDateSameDay = isSameDay(new Date(lastFoundTimestamp * 1000), new Date());
+            if (isDateSameDay) {
+                const merged = [...previousDates.split('\n'), ...dates].filter(Boolean);
+                const mergedAndDeduplicated = [...new Set(merged)];
+                console.log(mergedAndDeduplicated.join('\n'));
+            } else {
+                console.log(dates.join('\n'));
+            }
         } else {
             console.error('Dates not changed - ', dates.join(', '));
-            process.exit(1);
         }
     } else {
         console.error('No available dates');
-        process.exit(1);
     }
 
     await browser.close();
