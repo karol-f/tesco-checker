@@ -69,7 +69,7 @@ async function screenshotDOMElement(selector, page, path = 'page', padding = 0) 
         }, dateLinkSelector);
 
         if (foundDates.length) {
-            await screenshotDOMElement('.slot-selector', page,'dates');
+            await screenshotDOMElement('.slot-selector', page,`dates${i}`);
         }
 
         dates = [...dates, ...foundDates];
