@@ -31,52 +31,55 @@ async function screenshotDOMElement(selector, page, path = 'page', padding = 0) 
         width: 1200,
         height: 1800,
     });
-    await page.goto('https://ezakupy.tesco.pl/groceries/pl-PL/slots/delivery');
-    await page.waitForSelector('#email');
 
-    // Login
-    await page.type('#email', process.env.EMAIL);
-    await page.type('#password', process.env.PASS);
-    await page.click('.smart-submit-button .button');
+    try {
+        await page.goto('https://ezakupy.tesco.pl/groceries/pl-PL/slots/delivery');
+        await page.waitForSelector('#email');
 
-    // Check dates tabs
-    const tabsSelector = '.tabs .slot-selector--week-tabheader';
-    await page.waitForSelector(tabsSelector)
-        .catch(() => console.error(`Tabs were NOT found`));
-    const tabsCount = (await page.$$(tabsSelector)).length;
+        // Login
+        await page.type('#email', process.env.EMAIL);
+        await page.type('#password', process.env.PASS);
+        await page.click('.smart-submit-button .button');
 
-    // Select each tab
-    for (let i = 1; i < tabsCount + 1; i++) {
-        await page.waitFor(2000);
-        await page.click(`${tabsSelector}:nth-of-type(${i}) .slot-selector--week-tabheader-link`);
-        await page.waitForSelector('.slot-selector .overlay-spinner--overlay:not(.open)', { timeout: 12000 })
-            .catch(() => console.error(`NOT found .overlay-spinner--overlay:not(.open)`));
-        await page.waitForSelector(`${tabsSelector}:nth-of-type(${i}).active`, { timeout: 12000 })
-            .catch(() => console.error(`Tab ${i} NOT activated :(`));
+        // Check dates tabs
+        const tabsSelector = '.tabs .slot-selector--week-tabheader';
+        await page.waitForSelector(tabsSelector);
+        const tabsCount = (await page.$$(tabsSelector)).length;
 
-        // check available listed dates
-        const resultsSelector = '.slot-selector--week-tab .slot-grid__table';
-        await page.waitForSelector(resultsSelector, { timeout: 4000 })
-            .catch(() => {});
+        // Select each tab
+        for (let i = 1; i < tabsCount + 1; i++) {
+            await page.waitFor(2000);
+            await page.click(`${tabsSelector}:nth-of-type(${i}) .slot-selector--week-tabheader-link`);
+            await page.waitForSelector('.slot-selector .overlay-spinner--overlay:not(.open)', { timeout: 12000 });
+            await page.waitForSelector(`${tabsSelector}:nth-of-type(${i}).active`, { timeout: 12000 });
 
-        const dateLinkSelector = '.slot-grid__table .available-slot--button';
-        const foundDates = await page.evaluate(dateLinkSelector => {
-            const anchors = Array.from(document.querySelectorAll(dateLinkSelector));
-            return anchors.map(anchor => {
-                const date = anchor.textContent.split(',')[0].trim();
-                return date;
-            });
-        }, dateLinkSelector);
+            // check available listed dates
+            const resultsSelector = '.slot-selector--week-tab .slot-grid__table';
+            await page.waitForSelector(resultsSelector, { timeout: 3000 })
+                .catch(() => {});
 
-        if (foundDates.length) {
-            await screenshotDOMElement('.slot-selector', page,`dates${i}`);
+            const dateLinkSelector = '.slot-grid__table .available-slot--button';
+            const foundDates = await page.evaluate(dateLinkSelector => {
+                const anchors = Array.from(document.querySelectorAll(dateLinkSelector));
+                return anchors.map(anchor => {
+                    const date = anchor.textContent.split(',')[0].trim();
+                    return date;
+                });
+            }, dateLinkSelector);
+
+            if (foundDates.length) {
+                await screenshotDOMElement('.slot-selector', page,`dates${i}`);
+            }
+
+            dates = [...dates, ...foundDates];
         }
 
-        dates = [...dates, ...foundDates];
+        // deduplicate
+        dates = [...new Set(dates)];
+    } catch(e) {
+        console.error('Error occured: ', e);
+        await page.screenshot({ path: 'error.png' });
     }
-
-    // deduplicate
-    dates = [...new Set(dates)];
 
     // Results
     if (dates.length) {
