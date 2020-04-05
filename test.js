@@ -1,5 +1,4 @@
 const puppeteer = require('puppeteer');
-const isSameDay = require('date-fns/isSameDay');
 
 let dates = [];
 
@@ -89,18 +88,11 @@ async function screenshotDOMElement(selector, page, path = 'page', padding = 0) 
         const lastNotFoundTimestamp = parseInt(process.env.LAST_NOT_FOUND_DATES_TIMESTAMP, 10);
         const oneHour = 3600;
 
-        const isDateChanged = !previousDates || dates.some((date) => !previousDates.includes(date));
-        const isDateAppearAgain = (lastFoundTimestamp && lastNotFoundTimestamp) && (lastNotFoundTimestamp > lastFoundTimestamp) && (lastFoundTimestamp + oneHour < now );
+        const isDatesChanged = !previousDates || dates.some((date) => !previousDates.includes(date));
+        const isDatesAppearAgain = (lastFoundTimestamp && lastNotFoundTimestamp) && (lastNotFoundTimestamp > lastFoundTimestamp) && (lastFoundTimestamp + oneHour < now );
 
-        if (isDateChanged || isDateAppearAgain) {
-            const isDateSameDay = lastFoundTimestamp && isSameDay(new Date(lastFoundTimestamp * 1000), new Date());
-            if (isDateSameDay) {
-                const merged = [...previousDates.split('\n'), ...dates].filter(Boolean);
-                const mergedAndDeduplicated = [...new Set(merged)];
-                console.log(mergedAndDeduplicated.join('\n'));
-            } else {
-                console.log(dates.join('\n'));
-            }
+        if (isDatesChanged || isDatesAppearAgain) {
+            console.log(dates.join('\n'));
         } else {
             console.log('Dates not changed');
         }
