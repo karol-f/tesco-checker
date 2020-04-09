@@ -14,6 +14,7 @@ export TEST_OUTPUT=$(node test.js)
 if [ "$TEST_OUTPUT" == "No available dates" ] ; then
     export LAST_NOT_FOUND_DATES_TIMESTAMP=$(date +%s)
 elif [ "$TEST_OUTPUT" == "Dates not changed" ] ; then
+    echo '# Dates not changed, need to recheck #'
     export NEED_TO_RECHECK=true
 elif [[ ! -z "$TEST_OUTPUT" ]] ; then
     echo '### Dates found, need to recheck ###'

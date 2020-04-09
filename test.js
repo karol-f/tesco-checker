@@ -86,10 +86,10 @@ async function screenshotDOMElement(selector, page, path = 'page', padding = 0) 
         const now = (new Date().getTime() / 1000);
         const lastFoundTimestamp = parseInt(process.env.LAST_FOUND_DATES_TIMESTAMP, 10);
         const lastNotFoundTimestamp = parseInt(process.env.LAST_NOT_FOUND_DATES_TIMESTAMP, 10);
-        const oneHour = 3600;
+        const reappearingTimeout = 5400;
 
         const isDatesChanged = !previousDates || dates.some((date) => !previousDates.includes(date));
-        const isDatesAppearAgain = (lastFoundTimestamp && lastNotFoundTimestamp) && (lastNotFoundTimestamp > lastFoundTimestamp) && (lastFoundTimestamp + oneHour < now );
+        const isDatesAppearAgain = (lastFoundTimestamp && lastNotFoundTimestamp) && (lastNotFoundTimestamp > lastFoundTimestamp) && (lastFoundTimestamp + reappearingTimeout < now );
 
         if (isDatesChanged || isDatesAppearAgain) {
             console.log(dates.join('\n'));
